@@ -1,5 +1,4 @@
 import 'package:cards_english/common/di/di.dart';
-import 'package:cards_english/common/extensions/string_extention.dart';
 import 'package:cards_english/data/models/card_model.dart';
 import 'package:cards_english/data/repo/config/remote_config.dart';
 import 'package:cards_english/data/repo/get_cards_data/get_cards_data_repo.dart';
@@ -37,6 +36,7 @@ class RootBlock extends Cubit<RootState> {
       );
 
   Future<void> init() async {
+    _index = 0;
     try {
       emit(LoadingRootState());
       _listCardModels = await _getCardsDataRepo.getData();
@@ -62,15 +62,11 @@ class RootBlock extends Cubit<RootState> {
     await _config.remoteConfig.fetchAndActivate();
     Map<String, RemoteConfigValue> data = _config.remoteConfig.getAll();
     RemoteConfigValue? value = data['cards_config'];
+    String? dataConfig = value?.asString().replaceAll(' ', '');
+    var listConfig = dataConfig?.split(',');
     List<CardModel?> temp = [];
-    value?.asString().toSort().forEach((key, value) {
-      CardModel? model;
-      _listCardModels.forEach((element) {
-        if (element?.cardId?.trim() == key.trim()) {
-          model = element;
-        }
-      });
-      temp.insert(value, model);
+    listConfig?.forEach((e) {
+      temp.add(_listCardModels.where((element) => element?.cardId == e).first);
     });
     _listCardModels = temp;
   }
